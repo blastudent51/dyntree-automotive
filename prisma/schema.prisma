@@ -1,0 +1,377 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+enum OrderStatus {
+  RESERVED
+  CONFIGURATION_SAVED
+  AWAITING_PRODUCTION
+  ORDER_INVITATION
+  ORDER_CONFIRMED
+  SCHEDULED_FOR_PRODUCTION
+  IN_PRODUCTION
+  QUALITY_INSPECTION
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  clerkId String? @unique
+  email String @unique
+  firstName String @default("")
+  lastName String @default("")
+  phone String @default("")
+  role Role @default(CUSTOMER)
+  billingAddress Json?
+  deliveryAddress Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicleSubscriptions VehicleSubscription[]
+  configurations SavedConfiguration[]
+  reservations Reservation[]
+  auditLogs AdminAuditLog[]
+  refunds Refund[]
+}
+model Vehicle {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  description String
+  active Boolean @default(true)
+  specs Json
+  trims VehicleTrim[]
+  images VehicleImage[]
+}
+model VehicleTrim {
+  id String @id @default(uuid()) @db.Uuid
+  vehicleId String @db.Uuid
+  vehicle Vehicle @relation(fields:[vehicleId],references:[id])
+  slug String @unique
+  name String
+  description String
+  priceCents Int
+  symbol String
+  power Int
+  acceleration String
+  range String
+  drivetrain String
+  topSpeed Int
+  defaultWheel String
+  active Boolean @default(true)
+  features Json
+  specs Json
+  compatibleTrims String[]
+  includedTrims String[]
+  updatedAt DateTime @updatedAt
+}
+model VehicleImage {
+  id String @id @default(uuid()) @db.Uuid
+  vehicleId String @db.Uuid
+  vehicle Vehicle @relation(fields:[vehicleId],references:[id])
+  url String
+  alt String
+  trim String?
+  paint String?
+  wheel String?
+  interior String?
+  angle String
+  category String
+  priority Int @default(0)
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([vehicleId,angle,active])
+}
+model SavedConfiguration {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique
+  userId String @db.Uuid
+  user User @relation(fields:[userId],references:[id])
+  name String
+  configuration Json
+  estimatedPriceCents Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId,createdAt])
+}
+model Reservation {
+  id String @id @default(uuid()) @db.Uuid
+  number String? @unique
+  userId String? @db.Uuid
+  user User? @relation(fields:[userId],references:[id])
+  status OrderStatus @default(RESERVED)
+  paymentStatus String @default("PENDING")
+  depositCents Int
+  currency String @default("usd")
+  refundable Boolean
+  simulated Boolean @default(false)
+  legacyCheckoutSessionId String? @unique
+  checkoutSessionId String? @unique
+  paymentProvider String @default("stripe")
+  paymentEnvironment String @default("test")
+  paymentIntentId String? @unique
+  idempotencyKey String @unique
+  reservedForName String?
+  reservedForEmail String?
+  reservedForPhone String?
+  claimCode String?
+  amountDue Int @default(0)
+  amountPaid Int @default(0)
+  complimentary Boolean @default(false)
+  manualNote String?
+  claimedAt DateTime?
+  createdByAdminId String?
+  customer Json
+  billingAddress Json
+  deliveryAddress Json
+  deliveryMethod String @default("HOME_DELIVERY")
+  dealerId String? @db.Uuid
+  dealer Dealer? @relation(fields:[dealerId],references:[id])
+  agreementVersion String
+  agreementAcceptedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicleSubscription VehicleSubscription?
+  snapshot ReservationConfigurationSnapshot?
+  payments Payment[]
+  refunds Refund[]
+  history OrderStatusHistory[]
+  @@index([userId,createdAt])
+  @@index([reservedForName])
+  @@index([paymentStatus])
+  @@index([complimentary])
+}
+model ReservationConfigurationSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+  reservationId String @unique @db.Uuid
+  reservation Reservation @relation(fields:[reservationId],references:[id])
+  configuration Json
+  pricing Json
+  vehicleName String
+  estimatedPriceCents Int
+  terms Json
+  createdAt DateTime @default(now())
+}
+model Payment {
+  id String @id @default(uuid()) @db.Uuid
+  reservationId String @db.Uuid
+  reservation Reservation @relation(fields:[reservationId],references:[id])
+  providerPaymentIntentId String @unique
+  stripePaymentIntentId String? @unique
+  amountCents Int
+  currency String @default("usd")
+  status String
+  createdAt DateTime @default(now())
+}
+model Refund {
+  id String @id @default(uuid()) @db.Uuid
+  reservationId String @db.Uuid
+  reservation Reservation @relation(fields:[reservationId],references:[id])
+  providerRefundId String? @unique
+  stripeRefundId String? @unique
+  providerUpdatedAt DateTime?
+  idempotencyKey String @unique
+  amountCents Int
+  reason String
+  status String @default("PENDING")
+  adminId String? @db.Uuid
+  admin User? @relation(fields:[adminId],references:[id])
+  createdAt DateTime @default(now())
+}
+model Dealer {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  code String @unique
+  address String
+  city String
+  state String
+  zip String
+  latitude Float?
+  longitude Float?
+  phone String
+  email String
+  showroom Boolean @default(false)
+  service Boolean @default(false)
+  pickup Boolean @default(false)
+  delivery Boolean @default(false)
+  active Boolean @default(false)
+  reservations Reservation[]
+}
+model OrderStatusHistory {
+  id String @id @default(uuid()) @db.Uuid
+  reservationId String @db.Uuid
+  reservation Reservation @relation(fields:[reservationId],references:[id])
+  status OrderStatus
+  note String
+  createdAt DateTime @default(now())
+}
+model SiteSetting {
+  id String @id @default(uuid()) @db.Uuid
+  key String @unique
+  value Json
+  updatedAt DateTime @updatedAt
+}
+model AdminAuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  adminId String @db.Uuid
+  admin User @relation(fields:[adminId],references:[id])
+  action String
+  target String
+  before Json?
+  after Json?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+model WebhookEvent {
+  id String @id @default(uuid()) @db.Uuid
+  providerEventId String @unique
+  stripeEventId String? @unique
+  type String
+  createdAt DateTime @default(now())
+}
+model Counter {
+  id String @id
+  value Int @default(0)
+}
+model RateLimit {
+  key String @id
+  count Int @default(0)
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+model EmailOutbox {
+  id String @id @default(uuid()) @db.Uuid
+  dedupeKey String @unique
+  recipient String
+  template String
+  payload Json
+  status String @default("PENDING")
+  attempts Int @default(0)
+  lastError String?
+  sentAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model PaintColor {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  description String
+  priceCents Int
+  hex String?
+  imageUrl String?
+  features Json?
+  compatibleTrims String[]
+  includedTrims String[]
+  active Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model WheelOption {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  description String
+  priceCents Int
+  hex String?
+  imageUrl String?
+  features Json?
+  compatibleTrims String[]
+  includedTrims String[]
+  active Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model InteriorOption {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  description String
+  priceCents Int
+  hex String?
+  imageUrl String?
+  features Json?
+  compatibleTrims String[]
+  includedTrims String[]
+  active Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model PackageOption {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  description String
+  priceCents Int
+  hex String?
+  imageUrl String?
+  features Json?
+  compatibleTrims String[]
+  includedTrims String[]
+  active Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model Accessory {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  description String
+  priceCents Int
+  hex String?
+  imageUrl String?
+  features Json?
+  compatibleTrims String[]
+  includedTrims String[]
+  active Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model VehicleSubscription {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  reservationId String @unique @db.Uuid
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  stripePriceId String
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  checkoutSessionId String? @unique
+  checkoutAttempt Int @default(0)
+  status String @default("INVITED")
+  monthlyCents Int
+  currency String @default("usd")
+  livemode Boolean
+  termsVersion String
+  termsSnapshot Json
+  agreementAcceptedAt DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  currentPeriodEnd DateTime?
+  lastSyncedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  invoices SubscriptionInvoice[]
+  @@index([userId, createdAt])
+}
+model SubscriptionInvoice {
+  id String @id @default(uuid()) @db.Uuid
+  vehicleSubscriptionId String @db.Uuid
+  vehicleSubscription VehicleSubscription @relation(fields: [vehicleSubscriptionId], references: [id])
+  stripeInvoiceId String @unique
+  status String
+  amountDueCents Int
+  amountPaidCents Int
+  currency String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

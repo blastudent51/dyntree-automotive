@@ -1,0 +1,252 @@
+import type { Catalog, CatalogOption, Trim } from './types';
+const all = ['divide', 'subtract', 'add', 'multiply'];
+const option = (
+  slug: string,
+  name: string,
+  priceCents: number,
+  description: string,
+  extra: Partial<CatalogOption> = {},
+): CatalogOption => ({
+  slug,
+  name,
+  priceCents,
+  description,
+  active: true,
+  compatibleTrims: all,
+  includedTrims: [],
+  ...extra,
+});
+const common = [
+  '14-inch LIVI center display',
+  '10.25-inch digital cluster',
+  'Wired & wireless CarPlay and Android Auto targets',
+  'Phone key & two NFC backup cards',
+  'Heat pump',
+  'Supervised Dyntree Drive',
+  'Dual-zone climate',
+  'OTA updates',
+  'J3400 / NACS charging',
+];
+const trims: Trim[] = [
+  {
+    ...option('divide', 'Divide', 5299000, 'Everything essential. Nothing ordinary.'),
+    symbol: '÷',
+    power: 315,
+    acceleration: '4.4',
+    range: '250',
+    drivetrain: 'RWD',
+    topSpeed: 140,
+    defaultWheel: 'aero19',
+    features: [...common, 'Heated front seats', '10-speaker audio'],
+    specs: {
+      wheels: '19-inch Aero Sport',
+      suspension: 'Standard',
+      audio: '10 speakers',
+      seats: 'Heated front seats',
+      hud: 'Technology Package',
+      performance: 'Standard calibration',
+    },
+  },
+  {
+    ...option('subtract', 'Subtract', 5699000, 'Refinement, distilled.'),
+    symbol: '−',
+    power: 335,
+    acceleration: '4.1',
+    range: '250',
+    drivetrain: 'RWD',
+    topSpeed: 140,
+    defaultWheel: 'dynamic19',
+    features: [
+      ...common,
+      'Upgraded materials & audio',
+      'Ambient lighting',
+      'Power passenger seat',
+      'Upgraded lighting',
+    ],
+    specs: {
+      wheels: '19-inch Dynamic',
+      suspension: 'Standard',
+      audio: 'Upgraded audio',
+      seats: 'Heated, power front seats',
+      hud: 'Technology Package',
+      performance: 'Optional Dynamic Package',
+    },
+  },
+  {
+    ...option('add', 'Add', 5999000, 'More connection. More capability.'),
+    symbol: '+',
+    power: 365,
+    acceleration: '3.9',
+    range: '240–245',
+    drivetrain: 'Dual-motor AWD',
+    topSpeed: 145,
+    defaultWheel: 'performance20',
+    features: [
+      ...common,
+      'Adaptive dampers',
+      'Upgraded brakes',
+      'Premium audio',
+      'Head-up display',
+      'Ventilated sport seats',
+      'Additional cooling',
+    ],
+    specs: {
+      wheels: '20-inch Dynamic Performance',
+      suspension: 'Adaptive',
+      audio: 'Premium audio',
+      seats: 'Heated & ventilated sport seats',
+      hud: 'Included',
+      performance: 'Upgraded brakes & cooling',
+    },
+  },
+  {
+    ...option('multiply', 'Multiply', 6599000, 'The fullest expression of M1E.'),
+    symbol: '×',
+    power: 400,
+    acceleration: '3.5',
+    range: '230–240',
+    drivetrain: 'Dual-motor AWD',
+    topSpeed: 155,
+    defaultWheel: 'performance20',
+    features: [
+      ...common,
+      'Adaptive sport suspension',
+      'Larger brakes',
+      'Track UI',
+      'Head-up display',
+      'Premium audio',
+      'Ventilated sport seats',
+      'Heated rear seats',
+      'Performance tires & cooling',
+      'Sport steering calibration',
+    ],
+    specs: {
+      wheels: '20-inch Dynamic Performance',
+      suspension: 'Adaptive sport',
+      audio: 'Premium audio',
+      seats: 'Ventilated front, heated rear',
+      hud: 'Included',
+      performance: 'Track UI, sport steering & cooling',
+    },
+  },
+];
+export const seedCatalog: Catalog = {
+  vehicle: {
+    slug: 'm1e',
+    name: 'Dyntree M1E',
+    description: 'A premium all-electric two-door 2+2 coupe. Development prototype.',
+  },
+  trims,
+  paints: [
+    option('branch-white', 'Branch White', 0, 'A bright, clean metallic white.', {
+      hex: '#e6e8e5',
+    }),
+    option('graphite', 'Graphite', 0, 'A deep, architectural metallic gray.', { hex: '#535961' }),
+    option('midnight-black', 'Midnight Black', 75000, 'Deep gloss. Quiet presence.', {
+      hex: '#171a1e',
+    }),
+    option('volt-blue', 'Volt Blue', 100000, 'Electric blue with a vivid metallic depth.', {
+      hex: '#235ecd',
+    }),
+    option('copper-leaf', 'Copper Leaf', 125000, 'Warm metallic copper.', { hex: '#b67851' }),
+    option('crimson', 'Crimson', 100000, 'A rich, deep red.', { hex: '#8e2935' }),
+    option('forest-metallic', 'Forest Metallic', 125000, 'Dark green with a metallic finish.', {
+      hex: '#254b42',
+    }),
+  ],
+  wheels: [
+    option('aero19', '19-inch Aero Sport', 0, 'Sculpted aero surfaces for an efficient profile.', {
+      compatibleTrims: ['divide', 'subtract'],
+      includedTrims: ['divide'],
+    }),
+    option('dynamic19', '19-inch Dynamic', 150000, 'An open, technical multi-spoke design.', {
+      compatibleTrims: ['divide', 'subtract'],
+      includedTrims: ['subtract'],
+    }),
+    option(
+      'performance20',
+      '20-inch Dynamic Performance',
+      200000,
+      'Lightweight-inspired performance geometry.',
+      { compatibleTrims: ['add', 'multiply'], includedTrims: ['add', 'multiply'] },
+    ),
+  ],
+  interiors: [
+    option('graphite', 'Graphite', 0, 'Dark graphite upholstery with precision detailing.', {
+      hex: '#323333',
+    }),
+    option('cloud', 'Cloud', 100000, 'Light gray and white with soft contrast.', {
+      hex: '#d8d8d3',
+    }),
+    option('copper', 'Copper', 150000, 'Dark materials with warm copper and brown accents.', {
+      hex: '#976346',
+    }),
+    option(
+      'multiply-sport',
+      'Multiply Sport',
+      0,
+      'Sculpted sport seats, performance stitching and a sport steering wheel.',
+      { hex: '#282a2d', compatibleTrims: ['multiply'], includedTrims: ['multiply'] },
+    ),
+  ],
+  packages: [
+    option('dynamic', 'Dynamic Package', 350000, 'A sharper connection to every curve.', {
+      compatibleTrims: ['divide', 'subtract'],
+      features: [
+        'Adaptive dampers',
+        'Upgraded brakes',
+        'Performance tires',
+        'Sport seats',
+        'Cooling upgrades',
+        'Track UI',
+        '19-inch Dynamic wheels',
+      ],
+    }),
+    option('technology', 'Technology Package', 250000, 'More information. Less distraction.', {
+      compatibleTrims: all,
+      includedTrims: ['add', 'multiply'],
+      features: [
+        'Head-up display',
+        'Premium camera features',
+        'Upgraded audio',
+        'Enhanced parking visualization',
+      ],
+    }),
+    option('comfort', 'Comfort Package', 175000, 'A little more considered, everywhere.', {
+      compatibleTrims: all,
+      includedTrims: ['multiply'],
+      features: [
+        'Ventilated seats',
+        'Heated steering wheel',
+        'Heated rear seats',
+        'Premium interior materials',
+      ],
+    }),
+  ],
+  accessories: [
+    option(
+      'all-weather-mats',
+      'All-weather floor mats',
+      20000,
+      'Tailored protection for all four footwells.',
+    ),
+    option('cargo-liner', 'Cargo liner', 15000, 'A fitted, washable rear cargo liner.'),
+    option(
+      'home-charger',
+      'Home charging unit',
+      65000,
+      'Concept 11.5 kW AC wall unit. Installation quoted separately.',
+    ),
+  ],
+  images: [],
+  settings: {
+    amountCents: 25000,
+    refundable: true,
+    available: true,
+    productionWindow: 'Production timing to be announced',
+    language:
+      'This reservation does not constitute a final vehicle purchase agreement. Vehicle specifications, production timing, pricing, taxes, fees, options, and availability may change before final ordering.',
+    agreementVersion: '2026-09-19',
+  },
+  announcements: [],
+};

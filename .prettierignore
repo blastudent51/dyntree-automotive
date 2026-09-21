@@ -1,0 +1,9 @@
+node_modules
+.next
+dist
+.sites-runtime
+.wrangler
+components/ui
+vendor
+pnpm-lock.yaml
+docs/assets/generation-manifest.json

@@ -1,0 +1,14 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build:vercel",
+  "installCommand": "npm install",
+  "regions": [
+    "iad1"
+  ],
+  "crons": [
+    {
+      "path": "/api/jobs/email",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
