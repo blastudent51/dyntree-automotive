@@ -1,30 +1,34 @@
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
+import { leaseOfferInputSchema } from "@/lib/lease-offers";
 import { assertSameOrigin, errorResponse, rateLimit } from "@/lib/security";
-import { inviteSubscription } from "@/lib/subscriptions";
+import { generateLeaseInvitation } from "@/lib/subscriptions";
+
+const requestSchema = leaseOfferInputSchema
+  .extend({
+    reservationNumber: z.string().regex(/^DYN-M1E-\d{6,}$/),
+    confirmLease: z.literal(true),
+  })
+  .strict();
+
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
     const admin = await requireAdmin();
-    await rateLimit(request, "subscription-invite", admin.id, 10);
-    const data = z
-      .object({
-        reservationNumber: z.string().regex(/^DYN-M1E-\d{6,}$/),
-        priceId: z.string().regex(/^price_[A-Za-z0-9]+$/),
-        confirmReady: z.literal(true),
-      })
-      .strict()
-      .parse(await request.json());
-    return Response.json(
+    await rateLimit(request, "lease-offer-generate", admin.id, 10);
+
+    const data = requestSchema.parse(await request.json());
+    const result = await generateLeaseInvitation(
+      admin.id,
+      data.reservationNumber,
       {
-        record: await inviteSubscription(
-          admin.id,
-          data.reservationNumber,
-          data.priceId,
-        ),
+        termMonths: data.termMonths,
+        downPercent: data.downPercent,
+        annualMiles: data.annualMiles,
       },
-      { status: 201 },
     );
+
+    return Response.json(result, { status: 201 });
   } catch (e) {
     return errorResponse(e);
   }
