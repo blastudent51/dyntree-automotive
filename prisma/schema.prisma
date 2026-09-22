@@ -375,3 +375,37 @@ model SubscriptionInvoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+model Vehicle {
+  id          String   @id @default(uuid())
+
+  vin         String   @unique
+  treeId      String   @unique
+
+  ownerName   String?
+  ownerEmail  String?
+
+  model       String
+  trim        String
+  color       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments SupportAppointment[]
+}
+model SupportAppointment {
+  id          String   @id @default(uuid())
+
+  vehicleId   String
+  vehicle     Vehicle @relation(
+    fields: [vehicleId],
+    references: [id]
+  )
+
+  issue       String
+  status      String @default("REQUESTED")
+
+  appointment DateTime?
+
+  createdAt   DateTime @default(now())
+}
